@@ -9,7 +9,7 @@ import {
 } from 'react-hook-form';
 import { cn } from '@/utils/cn';
 
-const Form = FormProvider;
+const Form: typeof FormProvider = FormProvider;
 
 type FormFieldContextValue<
   TFieldValues extends FieldValues = FieldValues,

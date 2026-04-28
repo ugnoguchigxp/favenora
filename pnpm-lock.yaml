@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@vitest/pretty-format': 4.1.2
+
 importers:
 
   .:
@@ -23,6 +26,9 @@ importers:
       '@hono/zod-validator':
         specifier: ^0.7.6
         version: 0.7.6(hono@4.12.9)(zod@4.3.6)
+      '@idp/server-sdk':
+        specifier: file:../gxp-idProvider/packages/server-sdk
+        version: file:../gxp-idProvider/packages/server-sdk
       '@repo/design-system':
         specifier: workspace:*
         version: link:designSystem
@@ -80,6 +86,9 @@ importers:
       shadcn:
         specifier: ^4.1.2
         version: 4.1.2(@types/node@25.5.0)(typescript@6.0.2)
+      stripe:
+        specifier: ^22.1.0
+        version: 22.1.0(@types/node@25.5.0)
       tailwind-merge:
         specifier: ^3.5.0
         version: 3.5.0
@@ -126,6 +135,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.1.2
         version: 4.1.2(vitest@4.1.2(@types/node@25.5.0)(jsdom@29.0.1(@noble/hashes@1.8.0))(msw@2.12.14(@types/node@25.5.0)(typescript@6.0.2))(vite@6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)))
+      '@vitest/pretty-format':
+        specifier: 4.1.2
+        version: 4.1.2
       autoprefixer:
         specifier: ^10.4.27
         version: 10.4.27(postcss@8.5.8)
@@ -1183,6 +1195,9 @@ packages:
     peerDependencies:
       hono: '>=3.9.0'
       zod: ^3.25.0 || ^4.0.0
+
+  '@idp/server-sdk@file:../gxp-idProvider/packages/server-sdk':
+    resolution: {directory: ../gxp-idProvider/packages/server-sdk, type: directory}
 
   '@inquirer/ansi@1.0.2':
     resolution: {integrity: sha512-S8qNSZiYzFd0wAcyG5AXCvUHC5Sr7xpZ9wZ2py9XR88jUz8wooStVx5M6dRzczbBWjic9NP7+rY0Xi7qqK/aMQ==}
@@ -2798,12 +2813,6 @@ packages:
         optional: true
       vite:
         optional: true
-
-  '@vitest/pretty-format@3.2.4':
-    resolution: {integrity: sha512-IVNZik8IVRJRTr9fxlitMKeJeXFFFN0JaB9PHPGQ8NKQbGpfjlTx9zO4RefN8gp7eqjNy8nyK3NZmBzOPeIxtA==}
-
-  '@vitest/pretty-format@4.0.16':
-    resolution: {integrity: sha512-eNCYNsSty9xJKi/UdVD8Ou16alu7AYiS2fCPRs0b1OdhJiV89buAXQLpTbe+X8V9L6qrs9CqyvU7OaAopJYPsA==}
 
   '@vitest/pretty-format@4.1.2':
     resolution: {integrity: sha512-dwQga8aejqeuB+TvXCMzSQemvV9hNEtDDpgUKDzOmNQayl2OG241PSWeJwKRH3CiC+sESrmoFd49rfnq7T4RnA==}
@@ -4904,6 +4913,15 @@ packages:
     resolution: {integrity: sha512-1tB5mhVo7U+ETBKNf92xT4hrQa3pm0MZ0PQvuDnWgAAGHDsfp4lPSpiS6psrSiet87wyGPh9ft6wmhOMQ0hDiw==}
     engines: {node: '>=14.16'}
 
+  stripe@22.1.0:
+    resolution: {integrity: sha512-w/xHyJGxXWnLPbNHG13sz/fae0MrFGC80Oz7YbICQymbfpqfEcsoG+6yG+9BWb81PWc4rrkeSO4wmTcmefmbLw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      '@types/node': '>=18'
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
@@ -6096,6 +6114,8 @@ snapshots:
     dependencies:
       hono: 4.12.9
       zod: 4.3.6
+
+  '@idp/server-sdk@file:../gxp-idProvider/packages/server-sdk': {}
 
   '@inquirer/ansi@1.0.2': {}
 
@@ -7815,14 +7835,6 @@ snapshots:
       msw: 2.12.14(@types/node@25.5.0)(typescript@6.0.2)
       vite: 6.4.2(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3)
 
-  '@vitest/pretty-format@3.2.4':
-    dependencies:
-      tinyrainbow: 2.0.0
-
-  '@vitest/pretty-format@4.0.16':
-    dependencies:
-      tinyrainbow: 3.1.0
-
   '@vitest/pretty-format@4.1.2':
     dependencies:
       tinyrainbow: 3.1.0
@@ -7839,7 +7851,7 @@ snapshots:
 
   '@vitest/snapshot@4.0.16':
     dependencies:
-      '@vitest/pretty-format': 4.0.16
+      '@vitest/pretty-format': 4.1.2
       magic-string: 0.30.21
       pathe: 2.0.3
 
@@ -7860,13 +7872,13 @@ snapshots:
 
   '@vitest/utils@3.2.4':
     dependencies:
-      '@vitest/pretty-format': 3.2.4
+      '@vitest/pretty-format': 4.1.2
       loupe: 3.2.1
       tinyrainbow: 2.0.0
 
   '@vitest/utils@4.0.16':
     dependencies:
-      '@vitest/pretty-format': 4.0.16
+      '@vitest/pretty-format': 4.1.2
       tinyrainbow: 3.1.0
 
   '@vitest/utils@4.1.2':
@@ -9969,6 +9981,10 @@ snapshots:
 
   strip-json-comments@5.0.3: {}
 
+  stripe@22.1.0(@types/node@25.5.0):
+    optionalDependencies:
+      '@types/node': 25.5.0
+
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
@@ -10194,7 +10210,7 @@ snapshots:
     dependencies:
       '@vitest/expect': 4.0.16
       '@vitest/mocker': 4.0.16(msw@2.12.14(@types/node@24.12.2)(typescript@5.9.3))(vite@7.3.2(@types/node@24.12.2)(jiti@2.6.1)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.8.3))
-      '@vitest/pretty-format': 4.0.16
+      '@vitest/pretty-format': 4.1.2
       '@vitest/runner': 4.0.16
       '@vitest/snapshot': 4.0.16
       '@vitest/spy': 4.0.16

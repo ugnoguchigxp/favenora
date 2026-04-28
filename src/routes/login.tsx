@@ -12,6 +12,9 @@ function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [authMethods, setAuthMethods] = useState<{
+    identity: {
+      enabled: boolean;
+    };
     local: boolean;
     oauth: {
       enabled: boolean;
@@ -21,6 +24,9 @@ function Login() {
       };
     };
   }>({
+    identity: {
+      enabled: false,
+    },
     local: true,
     oauth: {
       enabled: false,
@@ -45,7 +51,8 @@ function Login() {
     const loadAuthMethods = async () => {
       try {
         const res = await client.auth.methods.$get({});
-        if (!res.ok || !active) return;
+        const identityRes = await client.identity.methods.$get({});
+        if (!res.ok || !identityRes.ok || !active) return;
         const data = (await res.json()) as {
           local: boolean;
           oauth: {
@@ -56,7 +63,8 @@ function Login() {
             };
           };
         };
-        setAuthMethods(data);
+        const identityData = (await identityRes.json()) as { enabled: boolean };
+        setAuthMethods({ ...data, identity: { enabled: identityData.enabled } });
       } catch {
         // Keep safe default: local only
       }
@@ -86,10 +94,38 @@ function Login() {
     }
   };
 
+  const handleIdentityLogin = async () => {
+    setError('');
+    try {
+      const res = await client.identity['login-url'].$get({
+        query: { returnTo: '/' },
+      });
+      if (!res.ok) {
+        throw new Error('Identity login failed');
+      }
+      const data = (await res.json()) as { url: string };
+      window.location.href = data.url;
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Identity login failed');
+    }
+  };
+
   return (
     <div className="mx-auto max-w-md">
       <h1>Login</h1>
       {error && <p className="text-red-500">{error}</p>}
+      {authMethods.identity.enabled ? (
+        <button
+          type="button"
+          onClick={handleIdentityLogin}
+          className="mb-6 w-full rounded border border-border px-3 py-2"
+        >
+          Login with Favenora ID
+        </button>
+      ) : null}
+      {authMethods.identity.enabled && (authMethods.local || authMethods.oauth.enabled) ? (
+        <hr className="my-8 border-border" />
+      ) : null}
       {authMethods.local ? (
         <form onSubmit={handleLogin} className="flex flex-col gap-4">
           <input

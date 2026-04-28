@@ -22,6 +22,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initAuth = async () => {
       try {
+        const identityRes = await client.identity.me.$get({});
+        if (identityRes.ok) {
+          const data = (await identityRes.json()) as {
+            user: { id: string; email: string };
+          };
+          setUser({ id: data.user.id, email: data.user.email });
+          setIsLoading(false);
+          return;
+        }
+
         const res = await client.auth.me.$get({});
         if (res.ok) {
           const data = (await res.json()) as { userId: string; email: string };
@@ -44,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
+      await client.identity.logout.$post({ json: { mode: 'local' } });
       await client.auth.logout.$post({});
     } catch {
       // ignore network error on logout

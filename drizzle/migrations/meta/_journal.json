@@ -15,6 +15,48 @@
       "when": 1775410000000,
       "tag": "0001_oauth_external_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777352660334,
+      "tag": "0002_sleepy_giant_girl",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777352889687,
+      "tag": "0003_chilly_pete_wisdom",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777354159571,
+      "tag": "0004_pale_silverclaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777355556960,
+      "tag": "0005_thick_robbie_robertson",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777356613497,
+      "tag": "0006_unusual_mach_iv",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777357371571,
+      "tag": "0007_classy_betty_ross",
+      "breakpoints": true
     }
   ]
 }

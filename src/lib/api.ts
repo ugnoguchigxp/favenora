@@ -47,26 +47,39 @@ const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promis
 
   const urlString = input.toString();
   const isRefreshEndpoint = urlString.includes('/auth/refresh');
+  const isIdentityRefreshEndpoint = urlString.includes('/identity/session/refresh');
   const isLoginEndpoint = urlString.includes('/auth/login');
   const isRegisterEndpoint = urlString.includes('/auth/register');
   const isLogoutEndpoint = urlString.includes('/auth/logout');
   const isMeEndpoint = urlString.includes('/auth/me');
+  const isIdentityMeEndpoint = urlString.includes('/identity/me');
+  const isIdentityLogoutEndpoint = urlString.includes('/identity/logout');
 
   if (
     response.status === 401 &&
     !isRefreshEndpoint &&
+    !isIdentityRefreshEndpoint &&
     !isLoginEndpoint &&
     !isRegisterEndpoint &&
     !isLogoutEndpoint &&
-    !isMeEndpoint
+    !isMeEndpoint &&
+    !isIdentityMeEndpoint &&
+    !isIdentityLogoutEndpoint
   ) {
     if (!isRefreshing) {
       isRefreshing = true;
       try {
-        const refreshRes = await fetch('/api/auth/refresh', {
+        let refreshRes = await fetch('/api/identity/session/refresh', {
           method: 'POST',
           credentials: 'include',
         });
+
+        if (!refreshRes.ok) {
+          refreshRes = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+          });
+        }
 
         if (refreshRes.ok) {
           onRefreshed();

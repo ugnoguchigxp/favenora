@@ -1,16 +1,16 @@
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: hono-standard-postgres
+    image: postgres:16-alpine
+    container_name: favenora-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: hono_standard
+      POSTGRES_DB: favenora
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "12345:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - favenora_postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -18,4 +18,4 @@ services:
       retries: 5
 
 volumes:
-  postgres_data:
+  favenora_postgres_data:

@@ -9,16 +9,56 @@ import { createOpenApiRouter } from './lib/openapi';
 import { errorHandler } from './middleware/error-handler';
 import { loggerMiddleware } from './middleware/logger';
 import { rateLimiter } from './middleware/rate-limiter';
+import { aiAssistRouter } from './modules/ai-assist/ai-assist.routes';
+import {
+  adminAnalyticsRouter,
+  dashboardAnalyticsRouter,
+  internalAnalyticsRouter,
+} from './modules/analytics/analytics.routes';
 import { bbsRouter } from './modules/bbs/bbs.routes';
+import { contentSafetyRouter } from './modules/content-safety/content-safety.routes';
+import { creatorsRouter } from './modules/creators/creators.routes';
+import { fansubsRouter } from './modules/fansubs/fansubs.routes';
+import { identityRouter } from './modules/identity/identity.routes';
+import { dashboardMediaRouter, mediaRouter } from './modules/media/media.routes';
+import { membershipsRouter } from './modules/memberships/memberships.routes';
+import { notificationsRouter } from './modules/notifications/notifications.routes';
+import { paymentsRouter } from './modules/payments/payments.routes';
+import { postsRouter } from './modules/posts/posts.routes';
+import { projectsRouter, roadmapRouter } from './modules/projects/projects.routes';
+import { streamsRouter } from './modules/streams/streams.routes';
+import {
+  trustOperationsAdminRouter,
+  trustReportsRouter,
+} from './modules/trust-operations/trust-operations.routes';
 import { authRouter } from './routes/auth';
 import { healthRouter } from './routes/health';
 import { oauthRouter } from './routes/oauth';
 
 const apiRoutes = createOpenApiRouter()
   .route('/health', healthRouter)
+  .route('/identity', identityRouter)
+  .route('/creators', creatorsRouter)
+  .route('/media', mediaRouter)
+  .route('/dashboard', dashboardMediaRouter)
+  .route('/dashboard/analytics', dashboardAnalyticsRouter)
+  .route('/internal/analytics', internalAnalyticsRouter)
+  .route('/admin/analytics', adminAnalyticsRouter)
+  .route('/payments', paymentsRouter)
+  .route('/content-safety', contentSafetyRouter)
+  .route('/reports', trustReportsRouter)
+  .route('/admin/trust', trustOperationsAdminRouter)
+  .route('/notifications', notificationsRouter)
+  .route('/streams', streamsRouter)
+  .route('/fansubs', fansubsRouter)
+  .route('/ai-assist', aiAssistRouter)
   .route('/auth/oauth', oauthRouter)
   .route('/auth', authRouter)
-  .route('/bbs', bbsRouter);
+  .route('/bbs', bbsRouter)
+  .route('/memberships', membershipsRouter)
+  .route('/posts', postsRouter)
+  .route('/projects', projectsRouter)
+  .route('/', roadmapRouter);
 
 const app = createOpenApiRouter();
 const isProduction = config.NODE_ENV === 'production';

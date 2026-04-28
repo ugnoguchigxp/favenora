@@ -1,5 +1,9 @@
 # Favenora クリエイタープラットフォーム計画
 
+関連ドキュメント:
+
+- 実装知見・運用ルール: [docs/gnosis.md](/Users/y.noguchi/Code/favenora/docs/gnosis.md)
+
   
 
 ## 1. プロダクト方針

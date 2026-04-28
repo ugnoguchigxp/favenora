@@ -12,6 +12,19 @@ const envSchema = z
     JWT_ACCESS_EXPIRES_IN: z.string().default('15m'),
     JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
     AUTH_MODE: z.enum(['local', 'oauth', 'both']).default('both'),
+    GXP_IDP_ISSUER: z.string().url().optional(),
+    GXP_IDP_CLIENT_ID: z.string().trim().optional(),
+    GXP_IDP_CLIENT_SECRET: z.string().trim().optional(),
+    GXP_IDP_REDIRECT_URI: z.string().url().optional(),
+    GXP_IDP_POST_LOGOUT_REDIRECT_URI: z.string().url().optional(),
+    GXP_IDP_AUDIENCE: z.string().trim().optional(),
+    GXP_IDP_SCOPES: z.string().default('openid profile email'),
+    GXP_IDP_TIMEOUT_MS: z.coerce.number().int().positive().default(3000),
+    STRIPE_SECRET_KEY: z.string().trim().optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().trim().optional(),
+    STRIPE_SUCCESS_URL: z.string().url().optional(),
+    STRIPE_CANCEL_URL: z.string().url().optional(),
+    STRIPE_BILLING_PORTAL_RETURN_URL: z.string().url().optional(),
     GOOGLE_CLIENT_ID: z.string().trim().optional(),
     GOOGLE_CLIENT_SECRET: z.string().trim().optional(),
     GITHUB_CLIENT_ID: z.string().trim().optional(),
@@ -30,6 +43,10 @@ const envSchema = z
     const hasGoogleSecret = Boolean(env.GOOGLE_CLIENT_SECRET);
     const hasGithubId = Boolean(env.GITHUB_CLIENT_ID);
     const hasGithubSecret = Boolean(env.GITHUB_CLIENT_SECRET);
+    const hasGxpIssuer = Boolean(env.GXP_IDP_ISSUER);
+    const hasGxpClientId = Boolean(env.GXP_IDP_CLIENT_ID);
+    const hasGxpClientSecret = Boolean(env.GXP_IDP_CLIENT_SECRET);
+    const hasGxpRedirectUri = Boolean(env.GXP_IDP_REDIRECT_URI);
 
     if (hasGoogleId !== hasGoogleSecret) {
       ctx.addIssue({
@@ -45,6 +62,29 @@ const envSchema = z
         path: [hasGithubId ? 'GITHUB_CLIENT_SECRET' : 'GITHUB_CLIENT_ID'],
         message: 'Set both GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET together.',
       });
+    }
+
+    const gxpIdpConfigured =
+      hasGxpIssuer && hasGxpClientId && hasGxpClientSecret && hasGxpRedirectUri;
+    const gxpIdpPartiallyConfigured =
+      hasGxpIssuer || hasGxpClientId || hasGxpClientSecret || hasGxpRedirectUri;
+
+    if (gxpIdpPartiallyConfigured && !gxpIdpConfigured) {
+      for (const [key, present] of [
+        ['GXP_IDP_ISSUER', hasGxpIssuer],
+        ['GXP_IDP_CLIENT_ID', hasGxpClientId],
+        ['GXP_IDP_CLIENT_SECRET', hasGxpClientSecret],
+        ['GXP_IDP_REDIRECT_URI', hasGxpRedirectUri],
+      ] as const) {
+        if (!present) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: [key],
+            message:
+              'Set GXP_IDP_ISSUER, GXP_IDP_CLIENT_ID, GXP_IDP_CLIENT_SECRET, and GXP_IDP_REDIRECT_URI together.',
+          });
+        }
+      }
     }
 
     const oauthProviderCount =
@@ -99,4 +139,15 @@ if (corsOrigins.length === 0 || corsOrigins.includes('*')) {
 export const config = {
   ...result.data,
   CORS_ORIGINS: corsOrigins,
+  GXP_IDP_ENABLED: Boolean(
+    result.data.GXP_IDP_ISSUER &&
+      result.data.GXP_IDP_CLIENT_ID &&
+      result.data.GXP_IDP_CLIENT_SECRET &&
+      result.data.GXP_IDP_REDIRECT_URI
+  ),
+  GXP_IDP_SCOPE_LIST: result.data.GXP_IDP_SCOPES.split(/\s+/)
+    .map((scope) => scope.trim())
+    .filter((scope) => scope.length > 0),
+  GXP_IDP_AUDIENCE: result.data.GXP_IDP_AUDIENCE || result.data.GXP_IDP_CLIENT_ID,
+  STRIPE_ENABLED: Boolean(result.data.STRIPE_SECRET_KEY),
 };
