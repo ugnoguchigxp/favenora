@@ -1,5 +1,5 @@
 {
-  "name": "hono-standard",
+  "name": "favenora",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "biome check .",
     "lint:all": "biome check .",
+    "fix": "biome check --write .",
     "design-system:storybook": "pnpm -C designSystem storybook",
     "design-system:storybook:build": "pnpm -C designSystem build-storybook",
     "db:generate": "drizzle-kit generate",

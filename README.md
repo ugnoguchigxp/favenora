@@ -1,179 +1,229 @@
-# Hono Standard テンプレート
+# Favenora
 
-Hono、Drizzle ORM、React、TanStack Router を活用した、モダンで堅牢、かつ型安全なフルスタック・モノリス ウェブアプリケーションのテンプレートです。
+Favenora は、クリエイターの作品公開、会員制支援、fan sub、配信、制作管理、モデレーションを扱う OSS クリエイタープラットフォームです。
 
-## 目次
-- [技術スタック](#技術スタック)
-- [クイックスタート](#クイックスタート)
-- [主要コマンド](#主要コマンド)
-- [主な機能](#主な機能)
-- [アーキテクチャ・プロジェクト構成](#アーキテクチャプロジェクト構成)
-- [セキュリティ](#セキュリティ)
-- [ライセンス](#ライセンス)
+このリポジトリはテンプレートではなく、Favenora 用のフルスタックアプリケーションです。現状は Hono API、React/Vite フロントエンド、Drizzle/PostgreSQL、共有 Zod schema、ワークスペース内デザインシステムを同じリポジトリで扱うモジュラー・モノリス構成です。
 
----
+## 現在の実装状況
+
+- `api/` に Hono + Drizzle のバックエンドを実装しています。
+- `shared/schemas/` に API/フロントエンドで共有する Zod schema と型を置いています。
+- `src/` に React + Vite + TanStack Router のフロントエンドを置いています。
+- `designSystem/` は `@repo/design-system` として参照されるワークスペース内 UI パッケージです。
+- `docs/favenora.md` と `docs/domains/` にプロダクト方針、ドメイン設計、今後の実装計画をまとめています。
+
+フロントエンドはまだ BBS、ログイン、showcase などの薄い画面が中心です。一方でバックエンドと共有 schema は、identity、creators、posts、media、fansubs、ai-assist、content-safety、memberships、payments、streams、projects、analytics、notifications、trust-operations などのドメインに広がっています。
 
 ## 技術スタック
 
 ### バックエンド
-- **コア**: [Hono](https://hono.dev/) (Node.js adapter), TypeScript
-- **API ドキュメント**: [@hono/zod-openapi](https://github.com/honojs/middleware/tree/main/packages/zod-openapi) (Swagger UI 同梱)
-- **ミドルウェア**: CORS, Secure Headers, Timing, logger, rateLimiter, CSRF
 
-### データベース
-- **ORM**: [Drizzle ORM](https://orm.drizzle.team/)
-- **DB**: PostgreSQL (postgres.js)
+- Hono
+- `@hono/node-server`
+- `@hono/zod-openapi`
+- Drizzle ORM
+- PostgreSQL
+- postgres.js
+- Zod
+- JWT / httpOnly Cookie
+- Google/GitHub OAuth
+- gxp-idProvider 連携用 OIDC 設定
+- Stripe 連携用の支払いドメイン
 
 ### フロントエンド
-- **フレームワーク**: React 19, Vite
-- **ルーティング**: [TanStack Router](https://tanstack.com/router)
-- **状態管理/データ取得**: [TanStack Query](https://tanstack.com/query)
-- **UI/スタイリング**: Tailwind CSS + shadcn/ui (CSS変数を用いたテーミング) + Pencil (Design-to-Code)
+
+- React 19
+- Vite
+- TanStack Router
+- TanStack Query
+- Hono RPC client
+- Tailwind CSS
+- `@repo/design-system`
+- MSW
 
 ### テスト・品質管理
-- **ユニット/統合テスト**: [Vitest](https://vitest.dev/)
-- **E2E テスト**: [Playwright](https://playwright.dev/)
-- **静的解析・整形**: [Biome](https://biomejs.dev/)
 
----
+- Vitest
+- Playwright
+- Biome
+- TypeScript
+- Drizzle Kit
 
-## クイックスタート
+## セットアップ
 
 ### 前提条件
-- Node.js (v20+)
-- pnpm
+
+- Node.js 20+
+- pnpm 10+
 - Docker / Docker Compose
 
-### セットアップ手順
+### 依存関係
 
-1. **依存関係のインストール**
-   ```bash
-   pnpm install
-   ```
+```bash
+pnpm install
+```
 
-2. **環境変数の設定**
-   ```bash
-   cp .env.example .env
-   # .env 内の変数を環境に合わせて更新
-   ```
-   `AUTH_MODE` ごとの必須設定:
-   - `local`: OAuth設定は不要
-   - `oauth`: `APP_URL` と、`GOOGLE_*` または `GITHUB_*` のどちらか1組が必須
-   - `both`: `APP_URL` は必須（OAuthを使う場合は `GOOGLE_*` または `GITHUB_*` のどちらか1組を設定）
-   - `COOKIE_SAME_SITE=none` を使う場合は HTTPS (`APP_URL` が `https://...`) であることが必須
+### 環境変数
 
-   `VITE_ENABLE_MSW=true` を設定すると、開発時に MSW モックを有効化できます（デフォルトは `false`）。
-   リバースプロキシ配下（Nginx / Cloudflare など）で動かす場合は `TRUST_PROXY=true` を設定してください。
+```bash
+cp .env.example .env
+```
 
-3. **データベースの起動**
-   ```bash
-   docker-compose up -d
-   ```
-   このプロジェクトが使う PostgreSQL database 名は `favenora` です。別プロジェクトと同じ PostgreSQL server を共有する場合も、`DATABASE_URL` の path は `/favenora` にしてください。
+最低限のローカル開発では、次の値を確認してください。
 
-4. **データベースの初期化**
-   ```bash
-   pnpm db:migrate # 既存マイグレーションを適用
-   pnpm db:seed   # テストデータの投入
-   ```
+```env
+APP_URL=http://localhost:5173
+CORS_ORIGIN=http://localhost:5173
+DATABASE_URL=postgresql://postgres:postgres@localhost:12345/favenora
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+AUTH_MODE=both
+```
 
-5. **開発サーバーの起動**
-   ```bash
-   pnpm dev
-   ```
+`AUTH_MODE` の意味は次の通りです。
 
-アプリケーション、API、ドキュメントはすべて `http://localhost:5173` 経由でアクセス可能です。
+- `local`: メールアドレス/パスワード認証を使います。
+- `oauth`: Google/GitHub OAuth のどちらか一組以上の client id/secret が必要です。
+- `both`: local 認証を使い、OAuth 設定がある場合は OAuth も有効になります。
 
----
+`AUTH_MODE=oauth` または `AUTH_MODE=both` では `APP_URL` が必要です。`COOKIE_SAME_SITE=none` を使う場合は、HTTPS の `APP_URL` または `NODE_ENV=production` が必要です。
+
+任意機能として、gxp-idProvider 連携、Stripe、MSW を `.env.example` のコメントに従って設定できます。
+
+### データベース
+
+```bash
+docker-compose up -d
+pnpm db:migrate
+pnpm db:seed
+```
+
+ローカル PostgreSQL は `localhost:12345` で公開され、database 名は `favenora` です。
+
+### 開発サーバー
+
+```bash
+pnpm dev
+```
+
+Vite dev server は `http://localhost:5173` で起動します。`vite.config.ts` の Hono dev server plugin により、`/api/*` だけが Hono API に転送され、それ以外の SPA route と asset は Vite が扱います。
+
+主な URL:
+
+- アプリ: `http://localhost:5173`
+- API: `http://localhost:5173/api`
+- OpenAPI JSON: `http://localhost:5173/api/doc`
+- Swagger UI: `http://localhost:5173/api/ui`
+- Health check: `http://localhost:5173/api/health/live`, `http://localhost:5173/api/health/ready`
 
 ## 主要コマンド
 
 | コマンド | 説明 |
-|---|---|
-| `pnpm dev` | 開発サーバーの起動 |
-| `pnpm build` | プロダクションビルド (FE & BE) |
-| `pnpm start` | コンパイル済みバックエンドの実行 |
-| `pnpm test` | Vitest によるテスト実行 |
-| `pnpm test:e2e` | Playwright による E2E テスト実行 |
-| `pnpm test:e2e:smoke` | `@smoke` タグ付きE2Eのみ実行 |
-| `pnpm test:e2e:regression` | `@regression` タグ付きE2Eのみ実行 |
-| `pnpm test:coverage` | Vitest カバレッジレポート生成 |
-| `pnpm lint` | Biome によるコードチェック |
-| `pnpm typecheck` | TypeScript 型チェック |
-| `pnpm db:generate` | マイグレーションSQLを生成 |
-| `pnpm db:migrate` | マイグレーションを DB に適用 |
-| `pnpm db:push` | 開発用途でスキーマを直接反映（本番非推奨） |
-| `pnpm db:studio` | Drizzle Studio の起動 |
-| `pnpm db:seed` | シードデータの投入 |
+| --- | --- |
+| `pnpm dev` | Vite + Hono dev server を起動 |
+| `pnpm build` | フロントエンドとバックエンドをビルド |
+| `pnpm start` | `dist-api/index.js` の本番サーバーを起動 |
+| `pnpm typecheck` | TypeScript の型チェック |
+| `pnpm lint` | Biome によるチェック |
+| `pnpm format` | Biome による整形 |
+| `pnpm test` | Vitest を起動 |
+| `pnpm test:coverage` | Vitest coverage を生成 |
+| `pnpm test:e2e` | Playwright E2E を実行 |
+| `pnpm test:e2e:smoke` | `@smoke` タグ付き E2E を実行 |
+| `pnpm test:e2e:regression` | `@regression` タグ付き E2E を実行 |
+| `pnpm verify` | typecheck、lint、Vitest をまとめて実行 |
+| `pnpm db:generate` | Drizzle migration を生成 |
+| `pnpm db:migrate` | Drizzle migration を適用 |
+| `pnpm db:push` | 開発用に schema を直接 DB へ反映 |
+| `pnpm db:studio` | Drizzle Studio を起動 |
+| `pnpm db:seed` | seed data を投入 |
+| `pnpm design-system:storybook` | designSystem の Storybook を起動 |
+| `pnpm design-system:storybook:build` | designSystem の Storybook をビルド |
 
-### E2Eタグ運用
-- `@smoke`: 主要導線の高速確認用（PRごとに実行推奨）
-- `@regression`: 回帰確認用のフルスイート（定期実行/マージ前推奨）
+## アーキテクチャ
 
-### マイグレーション運用（推奨）
-1. スキーマ変更後に `pnpm db:generate` で SQL を生成
-2. 生成された `drizzle/migrations/*.sql` をレビューしてコミット
-3. ローカル・CI・本番で `pnpm db:migrate` を実行して適用
-4. `pnpm db:push` は試作や検証時のみ利用し、本番フローには使わない
+### バックエンド
 
----
+`api/app.ts` が Hono application を組み立て、`api/index.ts` が Node server を起動します。API は `/api` 配下に mount されます。
 
-## 主な機能
+主な構成:
 
-- **型安全な API (Hono RPC)**: バックエンドの型定義をフロントエンドで共有。
-- **OpenAPI ドキュメント**: `/api/doc` (JSON) と `/api/ui` (Swagger UI) を自動生成。
-- **認証システム**: JWT (Access/Refresh) と OAuth 2.0 (Google/GitHub) に対応。
-  - `GET /api/auth/methods` で有効なログイン方式（local/OAuth provider）を取得可能。
-- **BBS 機能**: スレッド作成、詳細閲覧、コメント投稿の実装サンプル。
-- **死活監視の分離**: liveness (`/api/health/live`) と readiness (`/api/health/ready`) を提供。
-- **パフォーマンスプロファイリング**: `Server-Timing` ヘッダーによる処理時間の可視化。
+- `api/modules/<domain>/<domain>.routes.ts`: OpenAPI route、入力 validation、HTTP response
+- `api/modules/<domain>/<domain>.service.ts`: ビジネスルール
+- `api/modules/<domain>/<domain>.repository.ts`: Drizzle による DB access
+- `api/routes/`: auth、oauth、health などの共通 route
+- `api/middleware/`: 認証、rate limit、logger、error handler
+- `api/db/schema.ts`: PostgreSQL schema
+- `api/lib/`: logger、OpenAPI helper、validation、password、sanitizer など
 
----
+`api/app.ts` で確認できる主な API mount:
 
-## アーキテクチャ・プロジェクト構成
+- `/api/identity`
+- `/api/creators`
+- `/api/media`
+- `/api/dashboard`
+- `/api/dashboard/analytics`
+- `/api/internal/analytics`
+- `/api/admin/analytics`
+- `/api/payments`
+- `/api/content-safety`
+- `/api/reports`
+- `/api/admin/trust`
+- `/api/notifications`
+- `/api/streams`
+- `/api/fansubs`
+- `/api/ai-assist`
+- `/api/auth/oauth`
+- `/api/auth`
+- `/api/bbs`
+- `/api/memberships`
+- `/api/posts`
+- `/api/projects`
 
-本プロジェクトはフロントエンドとバックエンドを統合した「モジュラー・モノリス」構造を採用し、ドメインベースでコードを凝集させることでメンテナンス性を高めています。エンドツーエンドの型安全性を実現するため、Hono RPC と Zod スキーマを共有しています。
+### フロントエンド
 
-### ディレクトリ構成
+`src/main.tsx` が React application を起動し、`src/routes/` が TanStack Router の file route になっています。`src/lib/api.ts` は `hc<AppType>('/api')` を使う Hono RPC client で、Cookie session の refresh retry もここに集約しています。
 
-- **`api/` (バックエンド)**
-  - `modules/`: 機能ドメインごとのコード層。各ドメインは以下の3層アーキテクチャで構成。
-    - `*.routes.ts`: ルーティング、リクエストバリデーション、レスポンスの返却。
-    - `*.service.ts`: ビジネスロジック。
-    - `*.repository.ts`: Drizzle ORM を用いたデータベースアクセス処理。
-  - `db/`, `middleware/`: DB接続設定や、認証・セキュリティ・ロギング等の共通ミドルウェア。
+現状の domain frontend は `src/modules/bbs/` が中心です。より大きな Favenora ドメインの画面実装は、`docs/domains/README.md` にある方針通り、`src/modules/<domain>/` に repository、service、hooks、components を寄せる想定です。
 
-- **`src/` (フロントエンド)**
-  - `modules/`: 機能ドメインごとのコード層。UIとロジックを近接して管理します。
-    - `components/`: ドメイン固有のUIコンポーネント。
-    - `hooks/`: 状態管理やUIの副作用を切り出したカスタムフック。
-    - `repositories/`: バックエンドAPIを呼び出すデータフェッチ層 (TanStack Query等の処理)。
-    - `services/`: フロントエンド側の複雑なロジックやデータ加工処理。
-  - `routes/`: TanStack Router によるファイルベースのルーティング。
-  - `lib/api.ts`: Hono RPCによる型安全な API クライアント (`client`) を定義。Cookie セッションの自動リフレッシュをカプセル化。
+### 共有 schema
 
-- **`shared/` (共有コード)**
-  - `schemas/`: Zod によるバリデーションスキーマ群。フロントエンドの入力検証と、バックエンドの引数検証で全く同じスキーマを再利用することで DRY な設計を実現。
+`shared/schemas/<domain>.schema.ts` を API contract と UI validation の Single Source of Truth として使います。
 
-- **`drizzle/`**
-  - DBのマイグレーション設定およびシードデータ生成スクリプト。
+原則:
 
----
+- DB table 型を API response や UI に直接漏らさない。
+- public、dashboard、admin、mutation input の schema を分ける。
+- sanitize、normalize、文字数、URL、enum、discriminated union などの構造 validation は shared schema に寄せる。
+- owner 判定、公開可否、閲覧権限、外部 provider 送信可否などの business rule は service 層で検証する。
 
-## セキュリティ
+### デザインシステム
 
-### トークン管理
-JWT (Access/Refresh) は `httpOnly Cookie` に保存されます。
-- **メリット**: JavaScript から直接参照できないため、トークン窃取系XSSに強い構成です。
-- **補足**: CSRF対策として `csrf()` ミドルウェアを併用し、`Origin/Referer` を検証します。
+`designSystem/` は pnpm workspace に含まれ、root package から `@repo/design-system` として参照されます。Storybook と component test を持つ独立パッケージです。
 
-### セキュリティミドルウェア
-- **CSRF**: Hono 標準の `csrf()` による Origin/Referer チェック。
-- **セキュリティヘッダー**: `Secure Headers` による CSP、HSTS 等の設定（本番では `unsafe-inline` / `unsafe-eval` を無効化）。
-- **レート制限**: ブルートフォース攻撃を防ぐための `rateLimiter` (メモリベース) を全 API に適用。
-- **CORS**: ワイルドカード不許可の明示オリジン許可リスト方式を採用。
+```bash
+pnpm design-system:storybook
+```
 
----
+## セキュリティ・運用上の注意
+
+- JWT access/refresh token は httpOnly Cookie に保存します。
+- CSRF middleware は `/api/*` に適用されています。
+- CORS は `CORS_ORIGIN` の明示 origin のみを許可し、`*` は起動時に拒否されます。
+- API 全体に rate limit があり、login/register はより厳しい limit が設定されています。
+- production では Hono が `dist/` の SPA asset と `index.html` を配信します。
+- `TRUST_PROXY=true` は Nginx、Cloudflare などの reverse proxy 配下でのみ有効化してください。
+- `pnpm db:push` は開発・検証用です。通常は `pnpm db:generate` で migration を生成し、SQL をレビューしてから `pnpm db:migrate` で適用します。
+
+## ドキュメント
+
+- [docs/favenora.md](docs/favenora.md): Favenora のプロダクト方針と全体計画
+- [docs/domains/README.md](docs/domains/README.md): ドメイン別設計ドキュメントの入口
+- [designSystem/README.md](designSystem/README.md): デザインシステム package の README
+
+## 現在残っている旧テンプレート由来の痕跡
+
+コードレビュー時点では、`package.json` の package name、初期画面の表示文言、OpenAPI title などに旧テンプレート由来の名前が残っています。README は Favenora の実態に合わせて更新していますが、プロダクト名の完全な置換は別途コード側で対応してください。
 
 ## ライセンス
+
 MIT
